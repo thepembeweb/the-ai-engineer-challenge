@@ -87,13 +87,17 @@ export default function Home() {
     inputRef.current?.focus();
 
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8001";
+      const apiBase =
+        process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8001";
       const res = await fetch(`${apiBase}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || `Server error ${res.status}`);
+      }
       setMessages((prev) => [
         ...prev,
         {
@@ -101,13 +105,13 @@ export default function Home() {
           content: data.reply || "The Oracle is speechless… try again!",
         },
       ]);
-    } catch {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
       setMessages((prev) => [
         ...prev,
         {
           role: "oracle",
-          content:
-            "⚠️ Couldn't reach the backend. Make sure the API is running on port 8001.",
+          content: `⚠️ ${msg}`,
         },
       ]);
     } finally {
